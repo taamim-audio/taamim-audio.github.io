@@ -80,6 +80,7 @@ footer{text-align:center;font-size:.8rem;opacity:.6;padding:0 12px 30px}
     <div class="sec">
       <h3>1. ההקלטות</h3>
       <p>המקליט/ה מתחייב/ת להקליט עבור טעמים את ההקלטות שסוכמו מול צוות טעמים (כגון טעמי התורה, טעמי ההפטרה וקטעי קריאה למשחקי הטעמים), בנוסח או בנוסחים שסוכמו, ובהתאם להנחיות שיימסרו.</p>
+      <p style="margin-top:8px">בנוסף, טעמים שומרים לעצמם את הזכות לבקש מהמקליט/ה הקלטות נוספות שלא נכללו ברשימת ההקלטות הראשונית שנמסרה לו/לה, ללא תשלום נוסף, ובלבד שאורכן הכולל של ההקלטות הנוספות לא יעלה על שתי דקות של הקלטה, במצטבר.</p>
     </div>
 
     <div class="sec">
@@ -182,7 +183,7 @@ footer{text-align:center;font-size:.8rem;opacity:.6;padding:0 12px 30px}
 /* טעמים — חתימה מקוונת על הסכם הקלטות. Backend: Supabase (אותו פרויקט של טופס הקוראים; anon insert-only, צוות קורא בהתחברות). */
 const SUPABASE_URL = 'https://gpipsjqkntcyczoxnnwa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_9zCWAwdh5h1euDJ67i0LuA_nSM9iW_Y';
-const AGREEMENT_VERSION = 'v1 (18/11/2026)';
+const AGREEMENT_VERSION = 'v2 (18/11/2026)';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { flowType: 'implicit' } });
 
 const $ = id => document.getElementById(id);
