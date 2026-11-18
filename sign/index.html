@@ -32,6 +32,7 @@ h2{margin:0 0 10px;font-size:1.25rem}
 .sec h3{margin:0 0 4px;font-size:1.02rem}
 .sec p{margin:0;line-height:1.65;font-size:.98rem}
 .sig-block{margin-top:18px;border-top:2px dashed var(--gold-outline);padding-top:12px}
+[hidden]{display:none!important}
 .sig-row{display:flex;align-items:center;gap:8px;margin:10px 0;flex-wrap:wrap}
 .sig-row .lbl{font-weight:700;white-space:nowrap}
 input,select,textarea{font-family:inherit;font-size:1rem;color:var(--slate);background:var(--field);border:2px solid var(--gold-outline);border-radius:10px;padding:10px 12px;width:100%}
@@ -179,7 +180,7 @@ footer{text-align:center;font-size:.8rem;opacity:.6;padding:0 12px 30px}
 
 <footer>כל הזכויות שמורות לצוות טעמים</footer>
 
-<script>
+<script type="module">
 'use strict';
 /* טעמים — חתימה מקוונת על הסכם הקלטות. Backend: Supabase (אותו פרויקט של טופס הקוראים; anon insert-only, צוות קורא בהתחברות). */
 const SUPABASE_URL = 'https://gpipsjqkntcyczoxnnwa.supabase.co';
@@ -218,7 +219,7 @@ function pos(e) {
 }
 canvas.addEventListener('pointerdown', e => {
   e.preventDefault(); drawing = true; drawn = true; last = pos(e);
-  canvas.setPointerCapture(e.pointerId);
+  try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
 });
 canvas.addEventListener('pointermove', e => {
   if (!drawing) return; e.preventDefault();
