@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>טעמים — הסכם הקלטות</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --sky1:#A0D1FA; --sky2:#B7DBF9;
+  --gold:#FFC727; --gold-light:#FFE393; --gold-outline:#E6AA00; --gold-dark:#E5B323;
+  --cream:#F9F3E7; --field:#FFF8DE;
+  --slate:#37474F; --green:#4CB050; --red:#FF5353;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Open Sans',sans-serif;color:var(--slate);background:var(--cream)}
+.site-header{background:linear-gradient(180deg,var(--sky1),var(--sky2));border-bottom:4px solid var(--gold);padding:22px 14px;text-align:center}
+.logo-badge-img{height:64px;width:auto}
+h1{margin:8px 0 2px;font-size:1.5rem}
+.subtitle{margin:0;font-weight:600;opacity:.75}
+.container{max-width:680px;margin:18px auto 40px;padding:0 12px;display:flex;flex-direction:column;gap:16px}
+.card{background:#fff;border:2px solid var(--gold-outline);border-radius:16px;padding:18px 16px;box-shadow:0 3px 0 var(--gold-dark)}
+h2{margin:0 0 10px;font-size:1.25rem}
+.agreement h2.doc-title{text-align:center;margin-bottom:4px}
+.doc-intro{margin-top:0}
+.sec{margin:14px 0}
+.sec h3{margin:0 0 4px;font-size:1.02rem}
+.sec p{margin:0;line-height:1.65;font-size:.98rem}
+.sig-block{margin-top:18px;border-top:2px dashed var(--gold-outline);padding-top:12px}
+.sig-row{display:flex;align-items:center;gap:8px;margin:10px 0;flex-wrap:wrap}
+.sig-row .lbl{font-weight:700;white-space:nowrap}
+input,select,textarea{font-family:inherit;font-size:1rem;color:var(--slate);background:var(--field);border:2px solid var(--gold-outline);border-radius:10px;padding:10px 12px;width:100%}
+input:focus,textarea:focus{outline:3px solid var(--gold-light);border-color:var(--gold-dark)}
+.inline-input{width:auto;min-width:120px;max-width:220px;display:inline-block;padding:6px 10px;text-align:center}
+.amount-input{direction:ltr;width:110px}
+.amount-input::placeholder{direction:rtl}
+input[readonly]{opacity:.85;background:#f3ecd9}
+#sig-canvas{width:100%;height:150px;background:var(--field);border:2px solid var(--gold-outline);border-radius:10px;touch-action:none;cursor:crosshair;display:block}
+.sig-tools{display:flex;justify-content:flex-start;margin-top:6px}
+.consent-box{background:#fff;border:2px dashed var(--gold-outline);border-radius:14px;padding:12px 14px;margin:16px 0 12px}
+.consent-check{display:flex;gap:8px;align-items:flex-start;font-weight:700;cursor:pointer}
+.consent-check input{width:22px;height:22px;flex:none;margin:0}
+.btn{font-family:inherit;font-weight:700;font-size:1rem;border:2px solid var(--gold-dark);border-radius:12px;padding:12px 20px;background:var(--gold);color:var(--slate);box-shadow:0 3px 0 var(--gold-dark);cursor:pointer}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--gold-dark)}
+.btn:disabled{opacity:.6;cursor:default;transform:none}
+.btn-soft{background:var(--gold-light);font-size:.85rem;padding:8px 14px}
+.btn-green{background:var(--green);border-color:#3d8b40;box-shadow:0 3px 0 #2e6b2e;color:#fff}
+.btn-primary{width:100%;font-size:1.1rem}
+.error{background:#ffe3e3;border:2px solid var(--red);color:#a12626;border-radius:10px;padding:10px 12px;margin:10px 0;font-weight:600}
+.hint{font-size:.85rem;opacity:.75;margin:6px 0}
+.req{color:var(--red)}
+.success{text-align:center}
+.success .check{width:56px;height:56px;line-height:56px;border-radius:50%;background:var(--green);color:#fff;font-size:1.8rem;margin:4px auto 10px;font-weight:800}
+#signed-preview{max-width:100%;border:2px solid var(--gold-outline);border-radius:12px;margin-top:12px}
+footer{text-align:center;font-size:.8rem;opacity:.6;padding:0 12px 30px}
+/* ניהול */
+.sig-item{border:2px solid var(--gold-outline);border-radius:12px;padding:12px;margin-bottom:10px;background:var(--field)}
+.sig-item .meta{font-size:.85rem;opacity:.8}
+.admin-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <img class="logo-badge-img" src="/readers/assets/taamim-logo-slate.png" alt="טעמים">
+  <h1>הסכם הקלטות</h1>
+  <p class="subtitle">צוות טעמים</p>
+</header>
+
+<!-- ===== חתימה ===== -->
+<main id="view-sign" class="container">
+
+  <section class="card agreement" id="agreement-card">
+    <h2 class="doc-title">הסכם הקלטות - טעמים</h2>
+    <p class="doc-intro">הסכם זה נחתם בין צוות טעמים (להלן: "טעמים") לבין החותם/ת מטה (להלן: "המקליט/ה").</p>
+
+    <div class="sec">
+      <h3>1. ההקלטות</h3>
+      <p>המקליט/ה מתחייב/ת להקליט עבור טעמים את ההקלטות שסוכמו מול צוות טעמים (כגון טעמי התורה, טעמי ההפטרה וקטעי קריאה למשחקי הטעמים), בנוסח או בנוסחים שסוכמו, ובהתאם להנחיות שיימסרו.</p>
+    </div>
+
+    <div class="sec">
+      <h3>2. איכות ההקלטות</h3>
+      <p>המקליט/ה מתחייב/ת שההקלטות יהיו באיכות טובה: קריאה ברורה ונעימה, במקום שקט וללא רעשי רקע, ובהתאם להנחיות ההקלטה שיימסרו. אם הקלטה מסוימת לא תעמוד באיכות שהוסכמה, טעמים רשאים לבקש הקלטה חוזרת של אותה הקלטה, והמקליט/ה יבצע/תבצע אותה ללא תשלום נוסף.</p>
+    </div>
+
+    <div class="sec">
+      <h3>3. התשלום</h3>
+      <p>טעמים ישלמו למקליט/ה סכום כולל של
+        <input type="text" class="inline-input amount-input" id="f-amount" inputmode="numeric" placeholder="____" aria-label="סכום התשלום הכולל בשקלים">
+        ש"ח. התשלום ישולם לאחר מסירת כל ההקלטות שסוכמו ואישורן על ידי טעמים, והוא מהווה את מלוא התמורה עבור ההקלטות ועבור הזכויות המוענקות בסעיף 4.</p>
+    </div>
+
+    <div class="sec">
+      <h3>4. זכויות ושימוש מסחרי</h3>
+      <p>המקליט/ה מעביר/ה לטעמים את כל הזכויות בהקלטות שיימסרו. טעמים יהיו רשאים להשתמש בהקלטות בכל דרך שימצאו לנכון, לרבות: השמעה באפליקציית טעמים ובמוצרים נוספים של טעמים; עריכה, חיתוך ושילוב של ההקלטות; שימוש מסחרי, לרבות באפליקציה בתשלום; ושימוש בחומרי שיווק. השימוש אינו מוגבל בזמן, אינו ניתן לביטול ואינו מזכה את המקליט/ה בתשלום נוסף מעבר לסכום בסעיף 3. טעמים לא יהיו חייבים לציין את שם המקליט/ה בשימוש בהקלטות.</p>
+    </div>
+
+    <div class="sec">
+      <h3>5. הצהרות המקליט/ה</h3>
+      <p>המקליט/ה מצהיר/ה כי: (א) ההקלטות יבוצעו על ידו/ה בלבד; (ב) מלאו לו/לה 18 שנים; (ג) קרא/ה את הסכם זה, הבין/ה את סעיפיו והוא/היא מסכים/ה להם.</p>
+    </div>
+
+    <div class="sec">
+      <h3>6. כללי</h3>
+      <p>הסכם זה מסכם את כל ההסכמות בין הצדדים בנושא ההקלטות, וגובר על כל הסכמה אחרת בעניין.</p>
+    </div>
+
+    <div class="sig-block">
+      <h3>חתימה</h3>
+      <div class="sig-row">
+        <span class="lbl">שם מלא:</span>
+        <input type="text" class="inline-input" id="f-name" autocomplete="name" placeholder="__________" style="flex:1;max-width:none">
+      </div>
+      <div class="sig-row">
+        <span class="lbl">תאריך:</span>
+        <span id="f-date"></span>
+      </div>
+      <div class="sig-row" style="align-items:flex-start">
+        <span class="lbl">חתימה:</span>
+        <div style="flex:1;min-width:200px">
+          <canvas id="sig-canvas"></canvas>
+          <div class="sig-tools"><button type="button" class="btn btn-soft" id="sig-clear">ניקוי חתימה</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="consent-box">
+      <label class="consent-check"><input type="checkbox" id="consent-check"> קראתי את ההסכם ואני מסכים/ה לכל סעיפיו</label>
+    </div>
+  </section>
+
+  <div id="form-error" class="error" hidden></div>
+  <button type="button" class="btn btn-primary" id="submit-btn">חתימה ושליחה</button>
+  <p class="hint" style="text-align:center">החתימה והשליחה נעשות כאן בדף — אין צורך להדפיס.</p>
+
+  <section id="sign-success" class="card success" hidden>
+    <div class="check">✓</div>
+    <h2>נחתם בהצלחה!</h2>
+    <p id="success-text">ההסכם החתום נשמר אצל צוות טעמים. שווה לשמור גם עותק אצלך:</p>
+    <button type="button" class="btn btn-green" id="download-btn">הורדת עותק חתום לטלפון</button>
+    <p class="hint">אם ההורדה לא עובדת — אפשר ללחוץ לחיצה ארוכה על התמונה ולשמור אותה.</p>
+    <img id="signed-preview" alt="ההסכם החתום">
+  </section>
+</main>
+
+<!-- ===== ניהול (צוות) ===== -->
+<main id="view-admin" class="container" hidden>
+  <section id="admin-gate" class="card">
+    <h2>כניסת צוות בלבד</h2>
+    <p class="hint">הגישה מיועדת לצוות טעמים בלבד. מזינים דוא"ל ומבקשים קישור כניסה — בלי סיסמה.</p>
+    <label>דוא"ל
+      <input type="email" id="admin-email" autocomplete="email" placeholder="you@example.com">
+    </label>
+    <div id="gate-error" class="error" hidden></div>
+    <div id="gate-msg" class="hint" hidden></div>
+    <div style="margin-top:10px">
+      <button class="btn btn-primary" id="magic-btn">שליחת קישור כניסה לדוא"ל</button>
+    </div>
+  </section>
+
+  <section id="admin-panel" hidden>
+    <div class="card">
+      <h2>חתימות על הסכם ההקלטות</h2>
+      <div class="hint" id="admin-stats"></div>
+      <div class="admin-actions">
+        <button class="btn btn-green" id="export-csv">ייצוא ל-CSV</button>
+        <button class="btn btn-soft" id="signout-btn">יציאה</button>
+      </div>
+      <div id="sig-list"></div>
+    </div>
+  </section>
+</main>
+
+<footer>כל הזכויות שמורות לצוות טעמים</footer>
+
+<script>
+'use strict';
+/* טעמים — חתימה מקוונת על הסכם הקלטות. Backend: Supabase (אותו פרויקט של טופס הקוראים; anon insert-only, צוות קורא בהתחברות). */
+const SUPABASE_URL = 'https://gpipsjqkntcyczoxnnwa.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_9zCWAwdh5h1euDJ67i0LuA_nSM9iW_Y';
+const AGREEMENT_VERSION = 'v1 (18/11/2026)';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { flowType: 'implicit' } });
+
+const $ = id => document.getElementById(id);
+const amountEl = $('f-amount'), nameEl = $('f-name'), dateEl = $('f-date');
+const consentEl = $('consent-check'), submitBtn = $('submit-btn'), errEl = $('form-error');
+
+/* --- תאריך החתימה; את הסכום ממלא הקורא --- */
+dateEl.textContent = new Date().toLocaleDateString('he-IL');
+amountEl.addEventListener('input', () => { amountEl.value = amountEl.value.replace(/[^\d]/g, ''); });
+
+/* --- חתימה (canvas) --- */
+const canvas = $('sig-canvas');
+const ctx = canvas.getContext('2d');
+let drawn = false;
+function sizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  const img = drawn ? canvas.toDataURL() : null;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#1a2a33';
+  if (img) { const im = new Image(); im.onload = () => ctx.drawImage(im, 0, 0, w, h); im.src = img; }
+}
+sizeCanvas();
+window.addEventListener('resize', sizeCanvas);
+
+let drawing = false, last = null;
+function pos(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+canvas.addEventListener('pointerdown', e => {
+  e.preventDefault(); drawing = true; drawn = true; last = pos(e);
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', e => {
+  if (!drawing) return; e.preventDefault();
+  const p = pos(e);
+  ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+  last = p;
+});
+['pointerup', 'pointercancel'].forEach(ev => canvas.addEventListener(ev, () => { drawing = false; }));
+$('sig-clear').addEventListener('click', () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height); drawn = false;
+});
+
+/* --- ניתוב --- */
+function route() {
+  const admin = location.hash.startsWith('#admin');
+  $('view-sign').hidden = admin;
+  $('view-admin').hidden = !admin;
+}
+window.addEventListener('hashchange', route);
+
+function showError(msg) { errEl.textContent = msg; errEl.hidden = false; errEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+
+/* --- הפקת תמונת מסמך חתום --- */
+let signedBlob = null;
+async function renderSignedDoc() {
+  const canvasOut = await html2canvas($('agreement-card'), { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+  return new Promise(resolve => canvasOut.toBlob(resolve, 'image/png'));
+}
+
+/* --- שליחה --- */
+submitBtn.addEventListener('click', async () => {
+  errEl.hidden = true;
+  const name = nameEl.value.trim();
+  const amount = parseInt(amountEl.value, 10);
+  if (!name) { showError('מלאו שם מלא.'); return; }
+  if (!amount || amount <= 0) { showError('מלאו את סכום התשלום הכולל (מספר בש"ח).'); return; }
+  if (!drawn) { showError('חסרה חתימה — חותמים באצבע או בעכבר בתיבת החתימה.'); return; }
+  if (!consentEl.checked) { showError('יש לסמן "קראתי ואני מסכים/ה" לפני החתימה.'); return; }
+
+  submitBtn.disabled = true; submitBtn.textContent = 'חותם ושולח…';
+  try {
+    signedBlob = await renderSignedDoc();
+  } catch (e) {
+    submitBtn.disabled = false; submitBtn.textContent = 'חתימה ושליחה';
+    showError('לא הצלחנו להפיק את העותק החתום — נסו שוב. אם זה חוזר, פנו לצוות טעמים.');
+    return;
+  }
+
+  const publicId = crypto.randomUUID();
+  const path = publicId + '/signed.png';
+  let saved = false, saveErr = '';
+  try {
+    const up = await sb.storage.from('signatures').upload(path, signedBlob, { contentType: 'image/png' });
+    if (up.error) throw new Error(up.error.message);
+    const ins = await sb.from('signatures').insert({
+      public_id: publicId,
+      name,
+      amount_ils: amount,
+      signed_doc_path: path,
+      agreement_version: AGREEMENT_VERSION,
+      agreement_text: $('agreement-card').innerText,
+      user_agent: navigator.userAgent
+    });
+    if (ins.error) throw new Error(ins.error.message);
+    saved = true;
+  } catch (e) { saveErr = String(e && e.message || e); }
+
+  /* נעילת הטופס אחרי חתימה */
+  [amountEl, nameEl, consentEl].forEach(el => { el.readOnly = true; el.disabled = true; });
+  $('sig-clear').hidden = true;
+  canvas.style.pointerEvents = 'none';
+  submitBtn.hidden = true;
+
+  const url = URL.createObjectURL(signedBlob);
+  $('signed-preview').src = url;
+  $('download-btn').onclick = () => {
+    const a = document.createElement('a');
+    a.href = url; a.download = 'הסכם-הקלטות-טעמים-חתום.png';
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+  if (!saved) {
+    $('success-text').textContent = 'העותק החתום הופק, אבל השמירה אצל צוות טעמים נכשלה (' + saveErr + '). הורידו את העותק ושלחו אותו לצוות טעמים בוואטסאפ.';
+  }
+  $('sign-success').hidden = false;
+  $('sign-success').scrollIntoView({ behavior: 'smooth' });
+});
+
+/* --- ניהול --- */
+async function renderAdmin() {
+  const { data } = await sb.auth.getSession();
+  const ok = !!data.session;
+  $('admin-gate').hidden = ok;
+  $('admin-panel').hidden = !ok;
+  if (ok) refreshAdminList();
+}
+async function sendMagicLink() {
+  const email = $('admin-email').value.trim();
+  const msg = $('gate-msg'), err = $('gate-error');
+  err.hidden = true; msg.hidden = true;
+  if (!email) { err.textContent = 'מלאו דוא"ל ואז בקשו קישור.'; err.hidden = false; return; }
+  const redirectTo = window.location.origin + window.location.pathname + '?auth=1';
+  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: redirectTo } });
+  if (error) {
+    const code = (error && error.code) || '';
+    if (error.status === 429 || code === 'over_email_send_rate_limit') {
+      err.textContent = 'יותר מדי בקשות כרגע — ממתינים כמה דקות ומנסים שוב.';
+    } else if (error.status === 422 || code === 'signup_disabled' || code === 'otp_disabled' || code === 'user_not_found') {
+      err.textContent = 'לא הצלחנו לשלוח קישור לכתובת הזו. פנו לצוות טעמים.';
+    } else {
+      err.textContent = 'שליחת הקישור נכשלה כרגע — נסו שוב בעוד כמה דקות.';
+    }
+    err.hidden = false; return;
+  }
+  msg.textContent = 'נשלח קישור כניסה לדוא"ל. לוחצים עליו — וחוזרים לכאן מחוברים.';
+  msg.hidden = false;
+}
+
+let adminRows = [];
+async function refreshAdminList() {
+  const list = $('sig-list');
+  list.innerHTML = '<p class="hint">טוען…</p>';
+  const { data, error } = await sb.from('signatures').select('*').order('signed_at', { ascending: false });
+  if (error) { list.innerHTML = ''; showAdminError(error.message); return; }
+  adminRows = data || [];
+  $('admin-stats').textContent = adminRows.length + ' חתימות';
+  if (!adminRows.length) { list.innerHTML = '<p class="hint">אין חתימות עדיין.</p>'; return; }
+  list.innerHTML = '';
+  for (const r of adminRows) {
+    const div = document.createElement('div');
+    div.className = 'sig-item';
+    const when = new Date(r.signed_at).toLocaleString('he-IL');
+    const title = document.createElement('div');
+    const strong = document.createElement('strong');
+    strong.textContent = r.name + ' — ' + r.amount_ils + ' ש"ח';
+    title.appendChild(strong);
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.textContent = when + ' · גרסת הסכם ' + r.agreement_version;
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-soft';
+    btn.style.marginTop = '8px';
+    btn.textContent = 'צפייה / הורדה של העותק החתום';
+    btn.addEventListener('click', async () => {
+      const res = await sb.storage.from('signatures').createSignedUrl(r.signed_doc_path, 3600);
+      if (res.error) { alert('פתיחת הקובץ נכשלה: ' + res.error.message); return; }
+      window.open(res.data.signedUrl, '_blank');
+    });
+    div.appendChild(title); div.appendChild(meta); div.appendChild(btn);
+    list.appendChild(div);
+  }
+}
+function showAdminError(m) {
+  const d = document.createElement('div');
+  d.className = 'error'; d.textContent = 'טעינת החתימות נכשלה: ' + m;
+  $('sig-list').appendChild(d);
+}
+$('export-csv').addEventListener('click', () => {
+  const rows = [['name', 'amount_ils', 'signed_at', 'agreement_version', 'public_id']];
+  for (const r of adminRows) rows.push([r.name, r.amount_ils, r.signed_at, r.agreement_version, r.public_id]);
+  const csv = '﻿' + rows.map(row => row.map(c => '"' + String(c == null ? '' : c).replace(/"/g, '""') + '"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = 'taamim-signatures.csv'; a.click();
+});
+$('signout-btn').addEventListener('click', async () => { await sb.auth.signOut(); renderAdmin(); });
+$('magic-btn').addEventListener('click', sendMagicLink);
+$('admin-email').addEventListener('keydown', e => { if (e.key === 'Enter') sendMagicLink(); });
+
+sb.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_IN' && !location.hash.startsWith('#admin')) { location.hash = '#admin'; return; }
+  if (location.hash.startsWith('#admin')) renderAdmin();
+});
+route();
+if (location.hash.startsWith('#admin')) renderAdmin();
+</script>
+</body>
+</html>
