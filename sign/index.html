@@ -7,6 +7,7 @@
 <title>טעמים — הסכם הקלטות</title>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
   --sky1:#A0D1FA; --sky2:#B7DBF9;
@@ -35,8 +36,7 @@ h2{margin:0 0 10px;font-size:1.25rem}
 input,select,textarea{font-family:inherit;font-size:1rem;color:var(--slate);background:var(--field);border:2px solid var(--gold-outline);border-radius:10px;padding:10px 12px;width:100%}
 input:focus,textarea:focus{outline:3px solid var(--gold-light);border-color:var(--gold-dark)}
 .inline-input{width:auto;min-width:120px;max-width:220px;display:inline-block;padding:6px 10px;text-align:center}
-.amount-input{direction:ltr;width:110px}
-.amount-input::placeholder{direction:rtl}
+.amount-fixed{font-weight:800;background:var(--field);border:2px solid var(--gold-outline);border-radius:8px;padding:2px 12px;display:inline-block;min-width:56px;text-align:center}
 input[readonly]{opacity:.85;background:#f3ecd9}
 #sig-canvas{width:100%;height:150px;background:var(--field);border:2px solid var(--gold-outline);border-radius:10px;touch-action:none;cursor:crosshair;display:block}
 .sig-tools{display:flex;justify-content:flex-start;margin-top:6px}
@@ -55,6 +55,7 @@ input[readonly]{opacity:.85;background:#f3ecd9}
 .success{text-align:center}
 .success .check{width:56px;height:56px;line-height:56px;border-radius:50%;background:var(--green);color:#fff;font-size:1.8rem;margin:4px auto 10px;font-weight:800}
 #signed-preview{max-width:100%;border:2px solid var(--gold-outline);border-radius:12px;margin-top:12px}
+.dl-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0}
 footer{text-align:center;font-size:.8rem;opacity:.6;padding:0 12px 30px}
 /* ניהול */
 .sig-item{border:2px solid var(--gold-outline);border-radius:12px;padding:12px;margin-bottom:10px;background:var(--field)}
@@ -91,7 +92,7 @@ footer{text-align:center;font-size:.8rem;opacity:.6;padding:0 12px 30px}
     <div class="sec">
       <h3>3. התשלום</h3>
       <p>טעמים ישלמו למקליט/ה סכום כולל של
-        <input type="text" class="inline-input amount-input" id="f-amount" inputmode="numeric" placeholder="____" aria-label="סכום התשלום הכולל בשקלים">
+        <span class="amount-fixed">150</span>
         ש"ח. התשלום ישולם לאחר מסירת כל ההקלטות שסוכמו ואישורן על ידי טעמים, והוא מהווה את מלוא התמורה עבור ההקלטות ועבור הזכויות המוענקות בסעיף 4.</p>
     </div>
 
@@ -142,7 +143,10 @@ footer{text-align:center;font-size:.8rem;opacity:.6;padding:0 12px 30px}
     <div class="check">✓</div>
     <h2>נחתם בהצלחה!</h2>
     <p id="success-text">ההסכם החתום נשמר אצל צוות טעמים. שווה לשמור גם עותק אצלך:</p>
-    <button type="button" class="btn btn-green" id="download-btn">הורדת עותק חתום לטלפון</button>
+    <div class="dl-actions">
+      <button type="button" class="btn btn-green" id="download-pdf-btn">הורדת עותק חתום כ-PDF</button>
+      <button type="button" class="btn btn-soft" id="download-btn">הורדת עותק חתום כתמונה (PNG)</button>
+    </div>
     <p class="hint">אם ההורדה לא עובדת — אפשר ללחוץ לחיצה ארוכה על התמונה ולשמור אותה.</p>
     <img id="signed-preview" alt="ההסכם החתום">
   </section>
@@ -183,16 +187,16 @@ footer{text-align:center;font-size:.8rem;opacity:.6;padding:0 12px 30px}
 /* טעמים — חתימה מקוונת על הסכם הקלטות. Backend: Supabase (אותו פרויקט של טופס הקוראים; anon insert-only, צוות קורא בהתחברות). */
 const SUPABASE_URL = 'https://gpipsjqkntcyczoxnnwa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_9zCWAwdh5h1euDJ67i0LuA_nSM9iW_Y';
-const AGREEMENT_VERSION = 'v2 (18/11/2026)';
+const AGREEMENT_VERSION = 'v3 (19/11/2026)';
+const AMOUNT_ILS = 150;
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { flowType: 'implicit' } });
 
 const $ = id => document.getElementById(id);
-const amountEl = $('f-amount'), nameEl = $('f-name'), dateEl = $('f-date');
+const nameEl = $('f-name'), dateEl = $('f-date');
 const consentEl = $('consent-check'), submitBtn = $('submit-btn'), errEl = $('form-error');
 
-/* --- תאריך החתימה; את הסכום ממלא הקורא --- */
+/* --- תאריך החתימה; הסכום קבוע מראש בהסכם --- */
 dateEl.textContent = new Date().toLocaleDateString('he-IL');
-amountEl.addEventListener('input', () => { amountEl.value = amountEl.value.replace(/[^\d]/g, ''); });
 
 /* --- חתימה (canvas) --- */
 const canvas = $('sig-canvas');
@@ -241,19 +245,41 @@ window.addEventListener('hashchange', route);
 function showError(msg) { errEl.textContent = msg; errEl.hidden = false; errEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
 
 /* --- הפקת תמונת מסמך חתום --- */
-let signedBlob = null;
+let signedBlob = null, signedCanvas = null;
 async function renderSignedDoc() {
-  const canvasOut = await html2canvas($('agreement-card'), { scale: 2, backgroundColor: '#ffffff', useCORS: true });
-  return new Promise(resolve => canvasOut.toBlob(resolve, 'image/png'));
+  signedCanvas = await html2canvas($('agreement-card'), { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+  return new Promise(resolve => signedCanvas.toBlob(resolve, 'image/png'));
+}
+
+/* --- הפקת PDF מהעותק החתום (עמודי A4) --- */
+function buildSignedPdf() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const margin = 10;
+  const imgWmm = 210 - margin * 2;
+  const pageHmm = 297 - margin * 2;
+  const pxPerMm = signedCanvas.width / imgWmm;
+  const pagePxH = Math.floor(pageHmm * pxPerMm);
+  let y = 0, first = true;
+  while (y < signedCanvas.height) {
+    const h = Math.min(pagePxH, signedCanvas.height - y);
+    const slice = document.createElement('canvas');
+    slice.width = signedCanvas.width; slice.height = h;
+    const sc = slice.getContext('2d');
+    sc.fillStyle = '#ffffff'; sc.fillRect(0, 0, slice.width, slice.height);
+    sc.drawImage(signedCanvas, 0, y, signedCanvas.width, h, 0, 0, slice.width, h);
+    if (!first) pdf.addPage();
+    pdf.addImage(slice.toDataURL('image/jpeg', 0.95), 'JPEG', margin, margin, imgWmm, h / pxPerMm);
+    y += h; first = false;
+  }
+  return pdf;
 }
 
 /* --- שליחה --- */
 submitBtn.addEventListener('click', async () => {
   errEl.hidden = true;
   const name = nameEl.value.trim();
-  const amount = parseInt(amountEl.value, 10);
   if (!name) { showError('מלאו שם מלא.'); return; }
-  if (!amount || amount <= 0) { showError('מלאו את סכום התשלום הכולל (מספר בש"ח).'); return; }
   if (!drawn) { showError('חסרה חתימה — חותמים באצבע או בעכבר בתיבת החתימה.'); return; }
   if (!consentEl.checked) { showError('יש לסמן "קראתי ואני מסכים/ה" לפני החתימה.'); return; }
 
@@ -275,7 +301,7 @@ submitBtn.addEventListener('click', async () => {
     const ins = await sb.from('signatures').insert({
       public_id: publicId,
       name,
-      amount_ils: amount,
+      amount_ils: AMOUNT_ILS,
       signed_doc_path: path,
       agreement_version: AGREEMENT_VERSION,
       agreement_text: $('agreement-card').innerText,
@@ -286,7 +312,7 @@ submitBtn.addEventListener('click', async () => {
   } catch (e) { saveErr = String(e && e.message || e); }
 
   /* נעילת הטופס אחרי חתימה */
-  [amountEl, nameEl, consentEl].forEach(el => { el.readOnly = true; el.disabled = true; });
+  [nameEl, consentEl].forEach(el => { el.readOnly = true; el.disabled = true; });
   $('sig-clear').hidden = true;
   canvas.style.pointerEvents = 'none';
   submitBtn.hidden = true;
@@ -297,6 +323,13 @@ submitBtn.addEventListener('click', async () => {
     const a = document.createElement('a');
     a.href = url; a.download = 'הסכם-הקלטות-טעמים-חתום.png';
     document.body.appendChild(a); a.click(); a.remove();
+  };
+  $('download-pdf-btn').onclick = () => {
+    try {
+      buildSignedPdf().save('הסכם-הקלטות-טעמים-חתום.pdf');
+    } catch (e) {
+      alert('הפקת ה-PDF נכשלה — אפשר להוריד את העותק כתמונה במקום.');
+    }
   };
   if (!saved) {
     $('success-text').textContent = 'העותק החתום הופק, אבל השמירה אצל צוות טעמים נכשלה (' + saveErr + '). הורידו את העותק ושלחו אותו לצוות טעמים בוואטסאפ.';
