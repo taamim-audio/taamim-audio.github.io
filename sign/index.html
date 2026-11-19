@@ -251,7 +251,7 @@ async function renderSignedDoc() {
   return new Promise(resolve => signedCanvas.toBlob(resolve, 'image/png'));
 }
 
-/* --- הפקת PDF מהעותק החתום (עמודי A4) --- */
+/* --- הפקת PDF מהעותק החתום (עמודי A4, מעבר עמוד רק ברווח בין בלוקים) --- */
 function buildSignedPdf() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF('p', 'mm', 'a4');
@@ -260,9 +260,37 @@ function buildSignedPdf() {
   const pageHmm = 297 - margin * 2;
   const pxPerMm = signedCanvas.width / imgWmm;
   const pagePxH = Math.floor(pageHmm * pxPerMm);
+
+  /* אזורים שאסור לחתוך דרכם: פסקאות, כותרות, שורות החתימה, תיבת החתימה ותיבת האישור */
+  const card = $('agreement-card');
+  const cardRect = card.getBoundingClientRect();
+  const scale = signedCanvas.width / cardRect.width;
+  const pad = 6 * scale;
+  const blocks = [];
+  card.querySelectorAll('h2, h3, p, .sig-row, #sig-canvas, .consent-box').forEach(el => {
+    const r = el.getBoundingClientRect();
+    if (r.height > 0) blocks.push({ top: (r.top - cardRect.top) * scale - pad, bottom: (r.bottom - cardRect.top) * scale + pad });
+  });
+
+  /* מוצא נקודת חיתוך שלא עוברת דרך אף בלוק, החל מנקודת היעד ומעלה */
+  function safeCut(target, from) {
+    let y = Math.min(target, signedCanvas.height);
+    let moved = true, guard = 0;
+    while (moved && guard++ < 1000) {
+      moved = false;
+      for (const b of blocks) {
+        if (y > b.top && y < b.bottom) { y = b.top; moved = true; }
+      }
+    }
+    /* אם לא נמצא רווח שמאפשר עמוד סביר, חותכים ביעד כפי שהוא */
+    if (y <= from + pagePxH * 0.3) return Math.min(target, signedCanvas.height);
+    return y;
+  }
+
   let y = 0, first = true;
   while (y < signedCanvas.height) {
-    const h = Math.min(pagePxH, signedCanvas.height - y);
+    const end = safeCut(y + pagePxH, y);
+    const h = end - y;
     const slice = document.createElement('canvas');
     slice.width = signedCanvas.width; slice.height = h;
     const sc = slice.getContext('2d');
@@ -270,7 +298,7 @@ function buildSignedPdf() {
     sc.drawImage(signedCanvas, 0, y, signedCanvas.width, h, 0, 0, slice.width, h);
     if (!first) pdf.addPage();
     pdf.addImage(slice.toDataURL('image/jpeg', 0.95), 'JPEG', margin, margin, imgWmm, h / pxPerMm);
-    y += h; first = false;
+    y = end; first = false;
   }
   return pdf;
 }
