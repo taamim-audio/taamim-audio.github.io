@@ -267,7 +267,7 @@ function buildSignedPdf() {
   const scale = signedCanvas.width / cardRect.width;
   const pad = 6 * scale;
   const blocks = [];
-  card.querySelectorAll('h2, h3, p, .sig-row, #sig-canvas, .consent-box').forEach(el => {
+  card.querySelectorAll('h2, h3, p, .sig-block, .sig-row, #sig-canvas, .consent-box').forEach(el => {
     const r = el.getBoundingClientRect();
     if (r.height > 0) blocks.push({ top: (r.top - cardRect.top) * scale - pad, bottom: (r.bottom - cardRect.top) * scale + pad });
   });
